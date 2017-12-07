@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage[letterpaper, portrait, margin=0.7in]{geometry}
+\pgfplotsset{compat=1.13}
+\usepackage{graphicx}
+\graphicspath{ {./} }
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\title{Crypto 1 Project}
+\author{
+  William Burton\\
+  \texttt{burtow@rpi.edu}
+  \and
+  Greg Cowan\\
+  \texttt{cowang@rpi.edu}
+}
+\date{December 7th, 2017}
+\begin{document}
+\maketitle
+\begin{flushleft}
+
+
+\section{Requirements}
+Alice and Bob each have m files, each file is $>10$MB. They want to find out
+how many files they have in common and which ones are shared. \\
+They start without a shared key, and they communicate over an insecure channel
+(e.g. LAN, WAN, or Internet). And, Alice and Bob are semi-honest, so our
+protocol should handle that. \\
+An eavesdropper should not be able to alter their communication or learn
+something about the transmitted messages. Alice and Bob should not learn
+anything else than the number and identities of the common files. \\
+We can use: collision resistant hash functions, existentially unforgeable MACs
+and digital signatures, and CPA-secure public-key and symmetric-key encryption.
+
+
+\section{Protocol}
+\begin{enumerate}
+  \item Ahead of time, a private-key, public-key pair is generated for both Alice and Bob.
+  \item Alice is initialized with Bob's public key, and her private key. Bob is initialized with Alice's public key and his private key.
+  In this case, these are shared by a trusted-courier, the user of the simulation. But they could be shared another secure way in a real application.
+  \item Alice and Bob use a Hash-and-sign signature sheme, like RSA-FDH, to transform the insecure channel to an authenticated one.
+  \item Alice and Bob transform the authenticated channel into an encrypted one using the El Gamal scheme.
+  \item Now, they can start the application-specific protocol.
+    \begin{enumerate}
+      \item Alice and Bob hash one copy of all their files.
+      \item Alice and Bob encrypt their hashes with \textit{their public} keys.
+      \item Alice and Bob send those encrypted hashes to the other one.
+      \item Bob and Alice encrypt their file's hashes with the other's public-key.
+      \item If an encryption matches, then they share that file.
+    \end{enumerate}
+\end{enumerate}
+
+
+\end{flushleft}
+\end{document}
