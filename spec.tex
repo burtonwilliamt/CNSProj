@@ -26,11 +26,11 @@
 Alice and Bob each have m files, each file is $>10$MB. They want to find out
 how many files they have in common and which ones are shared. \\
 They start without a shared key, and they communicate over an insecure channel
-(e.g. LAN, WAN, or Internet). And, Alice and Bob are semi-honest, so our
+(e.g. LAN, WAN, or Internet). Alice and Bob are semi-honest, so our
 protocol should handle that. \\
 An eavesdropper should not be able to alter their communication or learn
 something about the transmitted messages. Alice and Bob should not learn
-anything else than the number and identities of the common files. \\
+anything else other than the number and identities of the common files. \\
 We can use: collision resistant hash functions, existentially unforgeable MACs
 and digital signatures, and CPA-secure public-key and symmetric-key encryption.
 
