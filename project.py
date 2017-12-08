@@ -15,8 +15,8 @@ import socket
 import struct
 import pickle
 
-SECURITY_PARAMETER = 1024 #bits
-TOKEN_PADDING = 2048
+SECURITY_PARAMETER = 512 #bits
+TOKEN_PADDING = 512
 
 def collisionResistantHash(x):
     return int(hashlib.md5(x).hexdigest(), 16)
@@ -60,14 +60,14 @@ class BasicSocket():
         if len(size_byte_str) == 0:
             return None
         size = struct.unpack("<I", size_byte_str)[0]
-        print("Recv size: {}".format(size))
+        #print("Recv size: {}".format(size))
         byte_str = self.socket.recv(size)
         return byte_str
 
     def sendMessage(self, byte_str):
         msg_len = len(byte_str)
         msg_len_str =  struct.pack("<I", msg_len)
-        print("Send size: {}".format(msg_len))
+        #print("Send size: {}".format(msg_len))
         r = self.socket.send(msg_len_str)
         r = self.socket.send(byte_str)
         return r
