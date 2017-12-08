@@ -186,6 +186,23 @@ def getRSA():
 
 # Let's Authenticate!
 def runServer(config, config_file):
+    """
+    go through and hash all files
+
+    1)
+    create a new public and private key
+    encrypt each file's hash with the public key
+    send a pickle.dumps([public_key, enc_file_1, enc_file_2, ....])
+
+    2)
+    receive a similar object, then re-encrypt each hash with the new pub key,
+    compare each of those received encrypted hashses with the ecryptions of your own hashes
+
+    To write the client code, do these two steps in oposite order
+
+
+    No need to add any other layer of security, the pub-key crypto here already hides things.
+    """
     s = AuthSocket(config, config_file)
     msg = 'Test'.encode()
     s.sendMessage(msg)
