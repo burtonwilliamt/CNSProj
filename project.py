@@ -1,6 +1,7 @@
 import configparser
 import pickle
 import sys
+import os
 import socket
 import select
 import secrets
@@ -14,8 +15,8 @@ import socket
 import struct
 import pickle
 
-SECURITY_PARAMETER = 128 #bits
-TOKEN_PADDING = 128
+SECURITY_PARAMETER = 1024 #bits
+TOKEN_PADDING = 2048
 
 def collisionResistantHash(x):
     return int(hashlib.md5(x).hexdigest(), 16)
@@ -59,12 +60,14 @@ class BasicSocket():
         if len(size_byte_str) == 0:
             return None
         size = struct.unpack("<I", size_byte_str)[0]
+        print("Recv size: {}".format(size))
         byte_str = self.socket.recv(size)
         return byte_str
 
     def sendMessage(self, byte_str):
         msg_len = len(byte_str)
         msg_len_str =  struct.pack("<I", msg_len)
+        print("Send size: {}".format(msg_len))
         r = self.socket.send(msg_len_str)
         r = self.socket.send(byte_str)
         return r
@@ -118,11 +121,13 @@ class AuthSocket():
         msg_hash = collisionResistantHash(msg)
         if msg_hash != pow(token, self.cert, self.cert_N):
             print("ERROR! MAC HAS FAILED!!!!")
-            return
+            return None
         else:
-            return msg
+            obj = pickle.loads(msg)
+            return obj
 
-    def sendMessage(self, msg_str):
+    def sendMessage(self, obj):
+        msg_str = pickle.dumps(obj)
         format_str = "{{:0{}d}}".format(TOKEN_PADDING)
         msg_hash = collisionResistantHash(msg_str)
         token = pow(msg_hash, self.mac_key, self.mac_N)
@@ -184,6 +189,35 @@ def getRSA():
     # This concludes our testing
     return (p, q, e, d, N, phi)
 
+def createMessage(config):
+    print("Creating rsa values...")
+    p, q, e, d, N, phi = getRSA()
+    print("Finished generating.")
+
+    dirname = config.get("General", "files_dir")
+    directory = os.fsencode(dirname)
+
+    # (hash, name)
+    files = []
+    pubs = []
+
+    for file in os.listdir(directory):
+        filename = os.fsdecode(file)
+        path_str = os.path.join(directory, filename.encode()).decode()
+        print(path_str)
+        f = open(path_str, "r")
+        file_contents = f.read().encode()
+        file_hash = collisionResistantHash(file_contents)
+        print("Hash: {}".format(collisionResistantHash(file_contents)))
+        files.append((filename, file_hash))
+        pubs.append(pow(file_hash, e, N))
+
+    #note: might leak some information through ordering here
+    pubs = set(pubs)
+    pubs = list(pubs)
+    pubs = [(e, N)]+pubs
+    return (files, pubs)
+
 # Let's Authenticate!
 def runServer(config, config_file):
     """
@@ -202,15 +236,9 @@ def runServer(config, config_file):
 
 
     No need to add any other layer of security, the pub-key crypto here already hides things.
-    """
-    s = AuthSocket(config, config_file)
-    msg = 'Test'.encode()
-    s.sendMessage(msg)
 
-def runClient(config, config_file):
-    s = AuthSocket(config, config_file)
-    msg = s.getMessage()
-    embed()
+    """
+    return None
 
 def main():
     if len(sys.argv) < 2:
@@ -223,11 +251,22 @@ def main():
     is_server = config.getboolean('General', 'is_server')
 
 
+    files, pubs = createMessage(config)
+    s = AuthSocket(config, config_file)
+    others = None
     if is_server:
-        runServer(config, config_file)
+        others = s.getMessage()
+        s.sendMessage(pubs)
     else:
-        runClient(config, config_file)
-
+        s.sendMessage(pubs)
+        others = s.getMessage()
+    e = others[0][0]
+    N = others[0][1]
+    others = others[1:]
+    others = set(others)
+    for name, h in files:
+        if pow(h, e, N) in others:
+            print("{} is a duplicate with the other person!".format(name))
 
 
 if __name__ == "__main__":
