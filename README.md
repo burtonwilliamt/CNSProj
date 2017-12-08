@@ -24,4 +24,4 @@ Furthermore, the security parameter should be higher, but it takes too long to g
 In terms of general bugs, there are probably many, however one that I'm fairly sure is in there is that it tries to send everything as a single packet. If your security parameter is too large, or you have too many files, this will probably break.
 
 ## Running the Code
-The only python package you should need is gensafeprime for generating primes. Once you have that, delete the certificates, run project.py with pyhton 3 and the only argument being a .cfg file as templated. The party that is designated as the server should be run first. Wait for it to generate primes, then start the second party.
+The only python package you should need is gensafeprime for generating primes. Once you have that, delete the certificates, run project.py with python3 and the only argument being a .cfg file as templated. The party that is designated as the server should be run first. Wait for it to generate primes, then start the second party.
